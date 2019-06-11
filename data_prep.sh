@@ -4,9 +4,7 @@ corpus=${1:-"data/corpus"}
 numspk=${2-2}
 data=${3:-"data"}
 
-rm -f $data/wav.scp
-rm -f $data/reco2num_spk
-rm -f $data/utt2spk
+./file_check.sh $data
 
 for wav in $corpus/*; do
     uttID=$(basename $wav)
