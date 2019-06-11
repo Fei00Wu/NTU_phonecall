@@ -1,7 +1,8 @@
 #! /bin/bash 
 
 corpus=${1:-"data/corpus"}
-data=${2:-"data"}
+numspk=${2-2}
+data=${3:-"data"}
 
 rm -f $data/wav.scp
 rm -f $data/reco2num_spk
@@ -18,7 +19,7 @@ for wav in $corpus/*; do
     else
         echo "$uttID ffmpeg -v 8 -i $wav -f wav -acodec pcm_s16le -|" >> $data/wav.scp
     fi 
-    echo "$uttID 2" >> $data/reco2num_spk
+    echo "$uttID $numspk" >> $data/reco2num_spk
     echo "$uttID $uttID" >> $data/utt2spk 
 done
 
