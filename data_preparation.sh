@@ -1,8 +1,13 @@
 #! /bin/bash 
+echo "$0 $@"
 
-corpus=${1:-"data/corpus"}
-numspk=${2-2}
+corpus=${1:-"data/Audio"}
+numspk=${2:-2}
 data=${3:-"data"}
+
+tmp_audio=$data/tmp_audio
+rm -rf $tmp_audio
+mkdir $tmp_audio
 
 ./file_check.sh $data
 
@@ -15,7 +20,9 @@ for wav in $corpus/*; do
     if [ "$format" == "PCM" ]; then
         echo "$uttID $wav" >> $data/wav.scp
     else
-        echo "$uttID ffmpeg -v 8 -i $wav -f wav -acodec pcm_s16le -|" >> $data/wav.scp
+        ffmpeg -v 8 -i $wav -f wav -acodec pcm_s16le $tmp_audio/$uttID.wav
+        echo "$uttID $tmp_audio/$uttID.wav" >> $data/wav.scp
+        # echo "$uttID ffmpeg -v 8 -i $wav -f wav -acodec pcm_s16le -|" >> $data/wav.scp
     fi 
     echo "$uttID $numspk" >> $data/reco2num_spk
     echo "$uttID $uttID" >> $data/utt2spk 

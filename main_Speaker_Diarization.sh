@@ -1,16 +1,16 @@
-#!/bin/bash
+#! /bin/bash
 #Before running this program, pls run: ln -s symbolic_link_source target, in advance. Since I didnt figure out the enviroment variables problem so far...
 #--nj i: i files are processing in each time step
 #--cmd "run.pl"/"queue.pl"  run in local/server
 
 # Set this to the last stage you used, e.g. stage=3
 
-stage=5
+stage=6
 
 . utils/parse_options.sh
 mfccdir=`pwd`/mfcc
 vaddir=`pwd`/mfcc
-num_spkr=$1
+num_spkr=${1:-2}
 # put audios in ./data/Audio
 # results will be saved in ./data/SpeakerDiarization_results
 inputdir=data/Audio
@@ -32,6 +32,7 @@ mkdir -p $SCRIPTPATH/$datadir
 if [ $stage -le 0 ]; then
   bash ./data_preparation.sh $SCRIPTPATH/$inputdir $num_spkr $datadir
   utils/fix_data_dir.sh $datadir
+
 fi
 
 # Stage 1, make MFCCs, frame-level VAD decisions, and segments
@@ -101,8 +102,8 @@ fi
 # TODO: stage 6
 if [ $stage -le 6 ]; then
 # clean existed output folder and move new resuls into the output folder
-rm -rf $outputdir
-cp -r $datadir/diarization_result $outputdir
+# rm -rf $outputdir
+# cp -r $datadir/diarization_result $outputdir
 #rm -rf $datadir
 
 
@@ -148,7 +149,8 @@ do
     
     for i in $(seq 1 1 $num_spkr)
     do
-      ffmpeg -i $inputdir/$file_name.wav -af "${ARRAY[$i]}" $outputdir/${file_name_fist}_speaker_$i.wav
+      echo "ffmpeg -i $inputdir/$file_name.wav -af "${ARRAY[$i]}" $outputdir/${file_name_fist}_speaker_$i.wav"
+      # ffmpeg -i $inputdir/$file_name.wav -af "${ARRAY[$i]}" $outputdir/${file_name_fist}_speaker_$i.wav
     done
     
     file_name_fist=$file_name
@@ -175,6 +177,7 @@ done < "$input"
 
 for i in $(seq 1 1 $num_spkr)
 do
-  ffmpeg -i $inputdir/$file_name.wav -af "${ARRAY[$i]}" $outputdir/${file_name_fist}_speaker_$i.wav
+  # ffmpeg -i $inputdir/$file_name.wav -af "${ARRAY[$i]}" $outputdir/${file_name_fist}_speaker_$i.wav
+  echo "ffmpeg -i $inputdir/$file_name.wav -af "${ARRAY[$i]}" $outputdir/${file_name_fist}_speaker_$i.wav"
 done
 fi
