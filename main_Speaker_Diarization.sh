@@ -99,85 +99,15 @@ fi
 
 #exit 1;
 
-# TODO: stage 6
+# Stage 6: Audiolize rttm results, and clean tmp directories 
 if [ $stage -le 6 ]; then
-# clean existed output folder and move new resuls into the output folder
-# rm -rf $outputdir
-# cp -r $datadir/diarization_result $outputdir
-#rm -rf $datadir
-
-
-# create audio files which contain each person's voice 
-input=$outputdir/rttm
-read -a arr < $input
-file_name_fist=${arr[1]}
-#echo $file_name_fist
-
-ARRAY=()
-for i in $(seq 1 1 $num_spkr)
-do
-  #echo
-  ARRAY+=('')
-done
-#echo $ARRAY
-
-while IFS= read -r line
-do
-  #echo "$line"
-  stringarray=( $line )
-  file_name=${stringarray[1]}
-  #echo  $file_name
-  starting_timeline=${stringarray[3]}
-  ending_timeline=${stringarray[4]}
-  ending_timeline=$(awk "BEGIN {print $starting_timeline+$ending_timeline; exit}")
-  speaker_id=${stringarray[7]}
-  # echo $file_name_fist,$file_name,$starting_timeline,$ending_timeline,$speaker_id >> log 
-  if [ "$file_name" == "$file_name_fist" ]; then 
-    index=( $(seq 1 1 $num_spkr) )
-    index=( "${index[@]:0:$speaker_id-1}" "${index[@]:$speaker_id}" )
-    for i in ${index[@]}
-    do
-      if [ -z "${ARRAY[$i]}" ]
-      then
-        ARRAY[$i]="${ARRAY[$i]}volume=enable='between(t,$starting_timeline,$ending_timeline)':volume=0"
-      else
-        ARRAY[$i]="${ARRAY[$i]}, volume=enable='between(t,$starting_timeline,$ending_timeline)':volume=0"
-      fi
-    done
- 
-  else
+    # Clean exist output folder and move new resuls into the output folder
+    rm -rf $outputdir
+    cp -r $datadir/diarization_result $outputdir
     
-    for i in $(seq 1 1 $num_spkr)
-    do
-      echo "ffmpeg -i $inputdir/$file_name.wav -af "${ARRAY[$i]}" $outputdir/${file_name_fist}_speaker_$i.wav"
-      # ffmpeg -i $inputdir/$file_name.wav -af "${ARRAY[$i]}" $outputdir/${file_name_fist}_speaker_$i.wav
-    done
+    # Audiolize results 
+    ./get_result.sh $outputdir/rttm $outputdir $datadir $num_spkr
     
-    file_name_fist=$file_name
-    ARRAY=()
-    for i in $(seq 1 1 $num_spkr)
-    do
-      ARRAY+=('')
-    done
-
-    index=( $(seq 1 1 $num_spkr) )
-    index=( "${index[@]:0:$speaker_id-1}" "${index[@]:$speaker_id}" )
-    for i in ${index[@]}
-    do
-      if [ -z "${ARRAY[$i]}" ]
-      then
-        ARRAY[$i]="${ARRAY[$i]}volume=enable='between(t,$starting_timeline,$ending_timeline)':volume=0"
-      else
-        ARRAY[$i]="${ARRAY[$i]}, volume=enable='between(t,$starting_timeline,$ending_timeline)':volume=0"
-      fi
-    done
-  fi
-done < "$input"
-
-
-for i in $(seq 1 1 $num_spkr)
-do
-  # ffmpeg -i $inputdir/$file_name.wav -af "${ARRAY[$i]}" $outputdir/${file_name_fist}_speaker_$i.wav
-  echo "ffmpeg -i $inputdir/$file_name.wav -af "${ARRAY[$i]}" $outputdir/${file_name_fist}_speaker_$i.wav"
-done
+    # Remove temperate folders (data, intermediate reslts)  
+    rm -rf $datadir
 fi

@@ -1,18 +1,24 @@
 #! /bin/bash 
+
+# Audiolize rttm files. 
+# Usage:
+# ./get_result.sh <rttm file> <output directory> <data directory> <number of speaker>
+# E.g (default):
+# ./get_result.sh data/SpeakerDiarization_results/rttm data/SpeakerDiarization_result data/tmp 2 
+
 rttm=${1:-"data/SpeakerDiarization_results/rttm"}
 out_dir=${2:-"data/SpeakerDiarization_results"}
 data_dir=${3:-"data/tmp"}
 num_spk=${4:-2}
 
-set -euo
 rttm_dir=$data_dir/rttm_tmp
 inter_res=$data_dir/res_tmp
 
 stage=0
-# . utils/parse_options.sh
+. utils/parse_options.sh
 
 if [ $stage -le 0 ]; then
-    # Removing old files
+    # Removing old files if exist
     rm -rf $rttm_dir
     mkdir $rttm_dir   
     rm -rf $inter_res
@@ -27,6 +33,8 @@ if [ $stage -le 0 ]; then
 fi
 
 if [ $stage -le 1 ]; then
+    # Split rttm for each utterance based on speaker ID 
+    # (Spkr_1 - Spkr_n + silence ) 
     for utt_rttm in $rttm_dir/*;do 
         uttID=$(basename $utt_rttm)
         uttID=${uttID%".rttm"}
@@ -41,6 +49,7 @@ if [ $stage -le 1 ]; then
 fi
 
 if [ $stage -le 2 ]; then
+    # Gather sections (t_start , t_end) for each speaker 
     for utt_rttm in $rttm_dir/*; do
         if [ "${utt_rttm: -4}" != ".SIL" ]; then
             file_name=$(basename $utt_rttm)
@@ -72,6 +81,7 @@ if [ $stage -le 2 ]; then
                     >> $rttm_dir/$file_name.seg
             fi
         else
+        # Gather sections (t_start , t_end) for silence section
             file_name=$(basename $utt_rttm)
             file_name=${file_name%".SIL"}
             file_name="${file_name}_SIL"
@@ -99,13 +109,14 @@ if [ $stage -le 2 ]; then
 fi
 
 if [ $stage -le 3 ]; then
+    # Mute corresponding sections for each speaker and silence 
     for seg in $rttm_dir/*.seg;do
         sections=$(<$seg)
         outfile=$(basename $seg)
         outfile=${outfile%".seg"}
         uttID=$(echo $outfile | cut -d'_' -f1)
         audio=$(grep $uttID $data_dir/wav.scp | cut -d' ' -f2-)
-        echo "ffmpeg -i $audio -af $sections $out_dir/$uttID.wav"
+        # echo "ffmpeg -i $audio -af $sections $out_dir/$uttID.wav"
         ffmpeg -i $audio -af "$sections" $out_dir/$outfile.wav
         wait
     done
