@@ -1,17 +1,8 @@
 #! /bin/bash 
-# Data prepareation for NTU phone calls
-# Copyright     2019    Fei Wu
-#
-# Usaege:
-# ./data_preparation.sh <path to audios> <num_of_spkrs> <data directory>
-# E.g.(default):
-# ./data_preparation.sh data/Audio 2 data/tmp
 
-echo "$0 $@"
-
-corpus=${1:-"data/Audio"}
-numspk=${2:-2}
-data=${3:-"data/tmp"}
+corpus=${1:-"data/corpus"}
+numspk=${2-2}
+data=${3:-"data"}
 mkdir -p $data
 
 tmp_audio=$data/tmp_audio
@@ -20,17 +11,27 @@ mkdir $tmp_audio
 
 ./file_check.sh $data
 
+#set sampling rate depending on recipe
+setrate=8000
+
 for wav in $corpus/*; do
     uttID=$(basename $wav)
     uttID=${uttID%".wav"}
 
-    format=$(file $wav | cut -d, -f 3 | cut -d ' ' -f 3)
+    format=$(file $wav | cut -d ',' -f 3 | cut -d ' ' -f 3)
+    samplerate=$(file $wav | cut -d ',' -f 5 | cut -d ' ' -f 3)
+    echo "$uttID.wav : $samplerate"
     echo "$uttID.wav : $format"
     if [ "$format" == "PCM" ]; then
-        echo "$uttID $wav" >> $data/wav.scp
-    else
-        ffmpeg -v 8 -i $wav -f wav -acodec pcm_s16le $tmp_audio/$uttID.wav
-        echo "$uttID $tmp_audio/$uttID.wav" >> $data/wav.scp
+	if [ "$samplerate" == "$setrate"]; then
+	  echo "$uttID $wav" >> $data/wav.scp
+	else 
+	  ffmpeg -i $wav -f wav -ar $setrate $tmp_audio/$uttID.wav
+	  echo "$uttID $tmp_audio/$uttID.wav" >> $data/wav.scp
+	fi
+    else 
+	ffmpeg -v 8 -i $wav -f wav -acodec pcm_s16le -ar $setrate $tmp_audio/$uttID.wav
+	echo "$uttID $tmp_audio/$uttID.wav" >> $data/wav.scp
     fi 
     echo "$uttID $numspk" >> $data/reco2num_spk
     echo "$uttID $uttID" >> $data/utt2spk 
