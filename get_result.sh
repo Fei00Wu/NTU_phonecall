@@ -1,9 +1,10 @@
 #! /bin/bash 
-
-# Audiolize rttm files. 
+# Audiolize rttm files.
+# Copyright     2019   Fei Wu
+# 
 # Usage:
 # ./get_result.sh <rttm file> <output directory> <data directory> <number of speaker>
-# E.g (default):
+# E.g.(default):
 # ./get_result.sh data/SpeakerDiarization_results/rttm data/SpeakerDiarization_result data/tmp 2 
 
 rttm=${1:-"data/SpeakerDiarization_results/rttm"}
@@ -15,7 +16,7 @@ rttm_dir=$data_dir/rttm_tmp
 inter_res=$data_dir/res_tmp
 
 stage=0
-. utils/parse_options.sh
+# . utils/parse_options.sh
 
 if [ $stage -le 0 ]; then
     # Removing old files if exist
