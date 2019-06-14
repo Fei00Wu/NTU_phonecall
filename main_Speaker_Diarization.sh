@@ -100,6 +100,7 @@ fi
 #exit 1;
 
 # Stage 6: Audiolize rttm results, and clean tmp directories 
+# Modified by Fei Wu
 if [ $stage -le 6 ]; then
     # Clean exist output folder and move new resuls into the output folder
     rm -rf $outputdir
@@ -108,6 +109,6 @@ if [ $stage -le 6 ]; then
     # Audiolize results 
     ./get_result.sh $outputdir/rttm $outputdir $datadir $num_spkr
     
-    # Remove temperate folders (data, intermediate reslts)  
+    # Remove temperate folders (data, intermediate results)  
     rm -rf $datadir
 fi
